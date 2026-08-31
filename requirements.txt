@@ -1,4 +1,2 @@
-mysql-connector-python
-aiohttp~=3.7.4.post0
 discord.py
 requests

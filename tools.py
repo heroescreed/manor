@@ -1,77 +1,19 @@
 import asyncio
+import random
+import string
 import re
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 import discord
-import mysql.connector
-from mysql.connector import Error
 
 import ids
-import database
 
 if TYPE_CHECKING:
     from typing import Any
     from discord import Message, Reaction, Member, User
     from discord.client import Bot
     from discord.ext.commands import Context
-
-
-async def query_insert(string: "str") -> "bool":
-    """ Queries the database with a given SQL INSERT command
-
-    :param string: SQL INSERT command
-    :return: True if query succeeded, False if query failed
-    """
-    try:
-        connection = mysql.connector.connect(host=database.host,
-                                             database=database.database,
-                                             user=database.user,
-                                             password=database.password)
-        if connection.is_connected():
-            db_info = connection.get_server_info()
-            print("Connected to MySQL Server version ", db_info)
-            cursor = connection.cursor()
-            cursor.execute(string)
-            connection.commit()
-            print(cursor.rowcount, "Record inserted successfully into table")
-            cursor.close()
-            return True
-    except Error as e:
-        print("Error while connecting to MySQL", e)
-        return False
-    finally:
-        if connection.is_connected():
-            connection.close()
-            print("MySQL connection is closed")
-
-
-async def query_select(string: "str") -> "list":
-    """ Queries the database with a given SELECT SQL command
-
-    :param string: SQL SELECT query
-    :return: Result of query
-    """
-    try:
-        connection = mysql.connector.connect(host=database.host,
-                                             database=database.database,
-                                             user=database.user,
-                                             password=database.password)
-        if connection.is_connected():
-            db_info = connection.get_server_info()
-            print("Connected to MySQL Server version ", db_info)
-            cursor = connection.cursor()
-            cursor.execute(string)
-            result = cursor.fetchall()
-            return result
-    except Error as e:
-        print("Error while connecting to MySQL", e)
-    finally:
-        if connection.is_connected():
-            connection.close()
-            cursor.close()
-            print("MySQL connection is closed")
-
 
 async def log(client: "Bot", value: "Any"):
     """Writes to the log channel and the server log
@@ -103,11 +45,9 @@ async def check_student_number(student_number: "str") -> "bool":
     :param student_number: String to be checked
     :return: True if valid, false if invalid
     """
-    if len(student_number) != 8:
+    if len(student_number) != 9:
         return False
-    regex = r'^([A-C|a-c])\d{7}$'
-    return re.match(regex, student_number)
-
+    return True if re.match(r"^\d{9}$", student_number) else False
 
 async def user_input_dm(client: "Bot", ctx: "Context", reg_str: "str", timeout: "float | None" = None) -> "Message | None":
     """Gets input from the user and performs validation checks

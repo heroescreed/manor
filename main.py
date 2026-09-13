@@ -57,31 +57,29 @@ class AuthModal(Modal, title="Verify your Student Status"):
                 server.sendmail(
                     smtp_username,
                     f"{self.email.value}@ncl.ac.uk",
-                    f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\n To complete your verification, please DM the bot with the code below.\n\nYour verification code is: {verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you receive a 'Message could not be delivered' error when DMing the bot, please change your message settings in the server to \"Allow Direct Messages\".\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee."
+                    f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, please type the following into the verification channel:\n\nNUCATS{self.student_id.value}{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee."
                 )
         except Exception as e:
             print(f"Error sending email: {e}")
             await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
             return
 
-        await interaction.response.send_message("Thank you! We've sent a verification code to your university email. Please check your email and DM the bot with the code to complete your verification.", ephemeral=True)
+        await interaction.response.send_message("Thank you! We've sent a verification code to your university email. Please check your university email address.\n\nIf you can't find the code, check your spam folder, or try verifying again.", ephemeral=True)
 
-        # Wait for the user to DM the bot with the verification code
+        # Wait for the user to send the requested message in the verification channel
         def check(m):
-            return m.author == interaction.user and isinstance(m.channel, discord.DMChannel)
+            return m.author == interaction.user and m.channel.id == ids.auth_channel and m.content.startswith(f"NUCATS{self.student_id.value}")
 
         try:
             msg = await client.wait_for("message", check=check, timeout=300.0)
-            if msg.content.strip() == verification_code:
-                # Verification successful
+            if msg.content == f"NUCATS{self.student_id.value}{verification_code}":
+                await msg.delete()
                 await interaction.user.add_roles(discord.Object(id=ids.verified_role))
-                await interaction.user.send("Thank you! You have been successfully verified and given access to the server.", ephemeral=True)
+                await interaction.followup.send(f"Thank you {interaction.user.mention}! You have been verified. Please check your roles to ensure you have the 'Verified' role.", ephemeral=True)
             else:
-                # Verification failed
-                await msg.channel.send("The code you entered is incorrect. Please try again or create a ticket for assistance.")
+                await interaction.followup.send("The verification code you entered is incorrect. Please try again.", ephemeral=True)
         except asyncio.TimeoutError:
-            await interaction.user.send("You did not respond in time. Please try the verification process again.")
-            return
+            await interaction.followup.send("You took too long to respond. Please try the verification process again.", ephemeral=True)
 
 # Gets application token
 load_dotenv()
@@ -200,6 +198,45 @@ async def auth(ctx):
 
     # fallback if it was invoked as a normal command
     await ctx.send("Please use /auth from Discord.")
+
+@client.hybrid_command(name="stage_up", description="Move all users in the server up a stage.")
+async def stage_up(ctx):
+    """Only people with the role ids.committee_role can run this command.
+    This command is used at the start of a new academic year to move all users in the server up one stage.
+    Stage 1 moves to 2, 2 to 3, 3 to alumni, etc...
+
+    Args:
+        ctx (_type_): Command Context
+    """
+
+    if ids.committee_role not in [role.id for role in ctx.author.roles]:
+        await ctx.send("You do not have permission to use this command.")
+        return
+
+    await ctx.send("Are you sure you want to move all users up a stage? This action is reversable but annoying to do. (yes/no)")
+
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel and m.content.lower() in ["yes", "no"]
+
+    msg = await client.wait_for("message", check=check, timeout=60.0)
+    if msg.content.lower() == "no":
+        await ctx.send("Command cancelled.")
+        return
+
+    await ctx.send("Moving all users up a stage now. This may take a few minutes.")
+
+    for member in ctx.guild.members:
+        if ids.stage_1_role in [role.id for role in member.roles]:
+            await member.remove_roles(discord.Object(id=ids.stage_1_role))
+            await member.add_roles(discord.Object(id=ids.stage_2_role))
+        elif ids.stage_2_role in [role.id for role in member.roles]:
+            await member.remove_roles(discord.Object(id=ids.stage_2_role))
+            await member.add_roles(discord.Object(id=ids.stage_3_role))
+        elif ids.stage_3_role in [role.id for role in member.roles]:
+            await member.remove_roles(discord.Object(id=ids.stage_3_role))
+            await member.add_roles(discord.Object(id=ids.alumni_role))
+
+    await ctx.send("All users have been moved up a stage.\nPlease make an announcement to the server to inform members of this change.")
 
 client.run(token)
 

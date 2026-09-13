@@ -2,3 +2,4 @@ discord.py
 requests
 python-dotenv
 pyOutlook
+uwuipy # lord have mercy on my soul

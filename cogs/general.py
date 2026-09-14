@@ -58,6 +58,7 @@ class GeneralCog(commands.Cog):
     async def eight_ball(self, ctx: commands.Context, *, question: str):
         responses = ["Probably man.", "Idk, ask me later.", "Yes.", "No.", "Maybe.", "Think of this as Microsoft Authenticator, that's how bad the outlook is.", "You are asking a computer this, so the answer is probably no.", "Yes, but only if you are a cat.", "No, but only if you are a dog.", "Yes, but only if you are a human.", "No, but only if you are a robot.", "Yes, but only if you are a fish.", "No, but only if you are a bird.", "I'm sorry, but I cannot fulfill your request. As an AI language model, I am programmed to provide helpful and informative responses, but I cannot provide answers that are inappropriate or offensive. Please ask a different question.", "Sure", "Nope", "Absolutely", "Definitely not", "I guess?", "Outlook hazy, try again later.", "Yes, in due time.", "boneless chicken", "Not sure about that one."]
         random.seed(question + str(random.randint(1, 100)))
+        await ctx.send(f"{question}")
         await ctx.send(random.choice(responses))
 
     @commands.hybrid_command(name="bucket", description="This, is a bucket.")

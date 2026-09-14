@@ -59,6 +59,7 @@ class CommitteeCog(commands.Cog):
                 await member.remove_roles(discord.Object(id=ids.verified_role))
         await ctx.send("All users have been unverified.")
 
+    # TODO: This command needs to be edited to ensure the users roles in "Channels and Roles" are also updated, otherwise it freaks out.
     @commands.hybrid_command(name="stage_up", description="Move all users in the server up a stage.")
     async def stage_up(self, ctx: commands.Context):
         if not self.is_committee_member(ctx):

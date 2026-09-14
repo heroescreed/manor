@@ -400,6 +400,13 @@ async def rate(ctx, item: str):
     rating = random.randint(1, 10)
     await ctx.send(f"{item} is rated {rating}/10.")
 
+@client.hybrid_command(name="request_command", description="Ask the developers to add a new command.")
+async def request_command(ctx, description: str):
+    """Requests that the developers add a new command."""
+
+    await ctx.send("Thanks! This has been sent to the committee for review. If they like it, it will be added.")
+    await client.get_channel(ids.committee_channel).send(f"New command request from {ctx.author.mention}:\n{description}")
+
 @client.event
 async def on_member_join(member):
     """Sends a welcome message to the welcome channel when a user joins the server."""

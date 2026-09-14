@@ -391,6 +391,13 @@ async def uwuify(ctx, text: str | None = None):
     uwuified_text = uwu.uwuify(text)
     await ctx.send(uwuified_text)
 
+@client.hybrid_command(name="rate", description="Rates something from 1 to 10.")
+async def rate(ctx, item: str):
+    """Rates the specified item from 1 to 10."""
+
+    # Generate a random rating between 1 and 10
+    rating = random.randint(1, 10)
+    await ctx.send(f"{item} is rated {rating}/10.")
 
 @client.event
 async def on_member_join(member):

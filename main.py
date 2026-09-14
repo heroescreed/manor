@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ui import Modal, TextInput
 from dotenv import load_dotenv
+from lightstreamer_client import LightstreamerClient, Subscription, SubscriptionListener
 from uwuipy import Uwuipy
 
 import ids

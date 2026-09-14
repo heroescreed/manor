@@ -1,213 +1,87 @@
+import asyncio
+import os
 import random
-import string
+import re
 import smtplib
-from csv import writer
-from typing import TYPE_CHECKING
+import string
 
 import discord
 from discord.ext import commands
+from discord.ui import Modal, TextInput
 
 import ids
-import tools
-
-if TYPE_CHECKING:
-    from discord import Message
-    from discord.client import Bot
-    from discord.ext.commands import Context
-
-# Gets password for authing with the Google account
-with open("auth_password.txt", encoding="utf-8") as password_file:
-    auth_pw = password_file.read()
 
 
-class Authentication(commands.Cog):
-    def __init__(self, client: "Bot"):
-        self.client = client
+async def check_student_number(student_number: str) -> bool:
+    print(f"Checking student number: {student_number}")
+    if len(student_number) != 9:
+        return False
+    return bool(re.match(r"^\d{9}$", student_number))
 
-    @commands.command(brief="Starts the auth process",
-                      description="Starts the auth process. Can only be executed in the auth channel")
-    @commands.guild_only()
-    async def auth(self, ctx: "Context"):
-        if ctx.channel.id != ids.auth_channel:
+class AuthModal(Modal, title="Verify your Student Status"):
+    print("AuthModal called")
+    name = TextInput(label="Please enter your name..", placeholder="As it appears on your student ID card. (e.g. Alan Turing)", required=True, max_length=128)
+    student_id = TextInput(label="Please enter your student ID number.", placeholder="Full number please. (e.g. 123456789)", required=True, max_length=9)
+    email = TextInput(label="Enter your university username.", placeholder="e.g. c1234567, a.turing, etc...", required=True, max_length=128)
+
+    def __init__(self, bot: commands.Bot):
+        super().__init__()
+        self.bot = bot
+
+    async def on_submit(self, interaction: discord.Interaction):
+        print("Modal Submitted")
+        if not await check_student_number(self.student_id.value):
+            print("Invalid student number, modal failed.")
+            await interaction.response.send_message("We're very sorry, but your student number you entered is not valid.\nPlease check it and try again. If it still doesn't work, please open a ticket.", ephemeral=True)
             return
 
-        await tools.log(self.client, "``" + str(ctx.author) + "`` has begun the authentication")
-
-        # Gets the user's student number
-
-        await ctx.author.send("Thank you for starting the NUCATS authentication process.\n" +
-                              "**Step 1/7** \n"
-                              "Please enter your university student number (i.e. 180289690 or 210239379):")
-
-        student_number = await tools.user_input_dm(self.client, ctx, r"^\d{9}$", 180.0)
-        if student_number is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
+        verification_code = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+        print("Generated verification code")
+        try:
+            smtp_server = os.getenv("SMTP_SERVER")
+            smtp_port = int(os.getenv("SMTP_PORT"))  # type: ignore
+            smtp_username = os.getenv("SMTP_USERNAME")
+            smtp_password = os.getenv("SMTP_PASSWORD")
+            with smtplib.SMTP(smtp_server, smtp_port) as server:  # type: ignore
+                server.starttls()
+                server.login(smtp_username, smtp_password)  # type: ignore
+                server.sendmail(smtp_username, f"{self.email.value}@ncl.ac.uk", f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, please type the following into the verification channel:\n\nNUCATS{self.student_id.value}{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee.")
+                print(f"Sent verification email to {self.email.value}@ncl.ac.uk")
+        except Exception as error:  # noqa: BLE001
+            print(f"Error sending email: {error}")
+            await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
             return
 
-        # Gets the users email address
+        await interaction.response.send_message("Thank you! We've sent a verification code to your university email. Please check your university email address.\n\nIf you can't find the code, check your spam folder, or try verifying again.", ephemeral=True)
 
-        await ctx.author.send(
-            "Thank you.\n**Step 2/7**\nPlease enter the first part of your university email address (i.e. J.L.Smith2 or C10239379):")
-
-        username = await tools.user_input_dm(self.client, ctx, r"^[0-9,a-z,A-Z,.]{1,30}$", 60.0)
-        if username is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
-            return
-
-        # Generates a random auth code and emails this to the user
-
-        auth_code = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(8))
-
-        sent_from = "nucats.auth.no.reply@gmail.com"
-        to = [username.content + "@ncl.ac.uk"]
-        body = ("Hello " + str(
-            ctx.author) + ". Please copy and paste the following code into the discord private chat\n\n" + auth_code)
-        subject = "Verification Code"
-        email_text = f"""From: {sent_from}\r\nTo: {", ".join(to)}\r\nSubject: {subject}\r\n\
-                    {body}
-                    """
+        def check(message):
+            return message.author == interaction.user and message.channel.id == ids.auth_channel and message.content.startswith(f"NUCATS{self.student_id.value}")
 
         try:
-            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-            server.ehlo()
-            server.login("nucats.auth.no.reply@gmail.com", auth_pw)
-            server.sendmail("nucats.auth.no.reply@gmail.com", to, email_text)
-            server.close()
-        except discord.ClientException:
-            await ctx.author.send("Something went wrong. Please retry authentication or contact committee.")
+            message = await self.bot.wait_for("message", check=check, timeout=300.0)
+            if message.content == f"NUCATS{self.student_id.value}{verification_code}":
+                print(f"User {interaction.user} verified successfully.")
+                await message.delete()
+                await asyncio.sleep(1)
+                await interaction.user.add_roles(discord.Object(id=ids.verified_role))
+                await interaction.followup.send(f"Thank you {interaction.user.mention}! You have been verified. Please check your roles to ensure you have the 'Verified' role.", ephemeral=True)
+            else:
+                await interaction.followup.send("The verification code you entered is incorrect. Please try again.", ephemeral=True)
+        except asyncio.TimeoutError:
+            await interaction.followup.send("You took too long to respond. Please try the verification process again.", ephemeral=True)
 
-        await ctx.author.send(
-            "**Step 3/7** \nWe have emailed a verification code to: ``" + username.content + "@ncl.ac.uk`` \n" +
-            "Please copy and paste it below.\n" +
-            "(This email may be in your junk mail)")
 
-        if await tools.user_input_dm(self.client, ctx, auth_code, 240.0) is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
+class AuthCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.hybrid_command(name="auth", description="For users to verify themselves.")
+    async def auth(self, ctx: commands.Context):
+        if ctx.interaction is not None:
+            await ctx.interaction.response.send_modal(AuthModal(self.bot))
             return
-
-        # Gets the user to accept the server rules
-
-        await ctx.author.send("**Step 4/6** \nPlease read our rules and type ``agree`` to accept them.")
-
-        with open("rules.txt", encoding="utf-8") as f:
-            lines = f.read()
-
-        await ctx.author.send(lines)
-        await ctx.author.send("**Please read the rules and type ``agree`` to accept them**")
-        await tools.user_input_dm(self.client, ctx, "agree")
-
-        # Gets the user to enter their real name to use on the server
-
-        if await ctx.author.send(
-                "**Step 5/7** \nAs part of the rules of the NUCATS server we require everyone's Discord name " +
-                "to be their actual name.\n" +
-                "Please enter your preferred name below:") is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
-            return
-
-        nickname = await tools.user_input_dm(self.client, ctx, r"\w{1,14}$", 60.0)
-        if nickname is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
-            return
-
-        await self.client.get_guild(ids.server_id).get_member(nickname.author.id).edit(
-            nick=nickname.content)
-
-        # Sets user pronouns
-
-        await ctx.author.send("**Step 6/7**")
-        reaction, user = await tools.get_user_pronouns(self.client, ctx, 90.0)
-        if reaction is None or user is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
-            return
-
-        member = self.client.get_guild(ids.server_id).get_member(user.id)
-
-        if str(reaction) == "♂":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.he_him_role)
-            pronoun = "He/him"
-
-        elif str(reaction) == "♀":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.she_her_role)
-            pronoun = "She/her"
-
-        else:
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.they_them_role)
-            pronoun = "They/them"
-
-        await member.add_roles(role)
-
-        # Sets users stage
-
-        await ctx.author.send(
-            "**Step 7/7** \n" +
-            "Please select which stage you are in by entering the corresponding number: \n" +
-            "1 - Stage 1 (First year) \n" +
-            "2 - Stage 2 \n" +
-            "3 - Stage 3 \n" +
-            "4 - Stage 4 \n" +
-            "5 - Placement \n" +
-            "6 - Post Grad \n" +
-            "7 - Alumni")
-        stage = await tools.user_input_dm(self.client, ctx, r"[1-7]{1}$", 60.0)
-        if stage is None:
-            await tools.log(self.client, "``" + str(ctx.author) + "`` did not respond to auth in time")
-            return
-
-        member = self.client.get_guild(ids.server_id).get_member(stage.author.id)
-        role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.stage_1_role)
-
-        if stage.content == "1":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.stage_1_role)
-
-        elif stage.content == "2":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.stage_2_role)
-
-        elif stage.content == "3":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.stage_3_role)
-
-        elif stage.content == "4":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.stage_4_role)
-
-        elif stage.content == "5":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.placement_role)
-
-        elif stage.content == "6":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.postgrad_role)
-
-        elif stage.content == "7":
-            role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.alumni_role)
-
-        await member.add_roles(role)
-
-        # Gives the user verified role
-
-        role = discord.utils.get(self.client.get_guild(ids.server_id).roles, id=ids.verified_role)
-        await member.add_roles(role)
-
-        await ctx.author.send("**🎉 You are now authenticated! 🎉**\n" +
-                              "You should now have access to the server. \n" +
-                              "If you have bought a membership, you will be give the member role shortly. \n" +
-                              "To change your pronouns, type ``!pronouns`` in this chat. \n" +
-                              "Channels have descriptions explaining what they are for and how everything works. " +
-                              "If you have any issues, contact committee.")
-
-        # Logs users details
-        await tools.log(self.client,
-                        f"``{username.author}`` has authenticated \n"
-                        f"  - Nickname ``{nickname.content}`` \n"
-                        f"  - Student Number ``{student_number.content}``\n"
-                        f"  - Email ``{username.content}`` \n"
-                        f"  - Stage ``{stage.content}`` \n"
-                        f"  - Pronouns ``{pronoun}`` \n"
-                        f"  - Id ``{member.id}``"
-                        )
-
-        with open("logs/verified_users.csv", "a", newline="", encoding="utf-8") as file:
-            file_writer = writer(file)
-            file_writer.writerow([member.id, student_number.content])
-            file.close()
+        await ctx.send("Please use /auth from Discord.")
 
 
-async def setup(client: "Bot"):
-    await client.add_cog(Authentication(client))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(AuthCog(bot))

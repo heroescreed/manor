@@ -1,27 +1,45 @@
-import asyncio
 import os
 
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
-# Gets application token
-with open("token.txt", encoding="utf-8") as file:
-    token = file.read()
+import ids
 
+
+class NUCATSBot(commands.Bot):
+    user: discord.ClientUser
+
+    def __init__(self, *, intents: discord.Intents):
+        super().__init__(command_prefix="!", intents=intents)
+
+    print("Loading extensions...")
+    async def setup_hook(self):
+        for extension in (
+            "cogs.auth",
+            "cogs.committee",
+            "cogs.general",
+            "cogs.member_events",
+        ):
+            print(f"Loading extension: {extension}")
+            await self.load_extension(extension)
+            print(f"Loaded extension: {extension}")
+
+    
+        self.tree.copy_global_to(guild=discord.Object(id=ids.server_id))
+        await self.tree.sync(guild=discord.Object(id=ids.server_id))
+
+print("Getting dotenv")
+load_dotenv()
+token = os.getenv("CLIENT_TOKEN")
+print("Starting bot...")
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix="!", intents=intents)
+
+client = NUCATSBot(intents=intents)
 
 
-async def load():
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            await client.load_extension(f"cogs.{filename[:-3]}")
+@client.event
+async def on_ready():
+    print(f"Bot is ready. Logged in as {client.user}")
 
-
-# Loads all cogs then starts the bot
-async def main():
-    await load()
-    await client.start(token)
-
-
-asyncio.run(main())
+client.run(token)  # type: ignore

@@ -1,25 +1,24 @@
-    1. Be respectful
-        You must respect all users, regardless of your liking towards them. Treat others the way you want to be treated.
+```
+         _         
+ ___ _ _| |___ ___ 
+|  _| | | | -_|_ -|
+|_| |___|_|___|___|
+```
 
-    2. No Inappropriate Language and Material
-        The use of profanity should be kept to a minimum. However, any derogatory language is prohibited.
+Be respectful - You must respect all users, regardless of your liking towards them. Treat others the way you want to be treated.
 
-    3. No spamming
-        Don't send a lot of small messages right after each other. Do not disrupt chat by spamming.
+No Inappropriate Language and Material - The use of profanity is allowed, but should not be used excessively. However, any derogatory language is prohibited.
 
-    4. No pornographic/adult/other NSFW material
-        This is a community server and not meant for sharing this kind of material.
+No spamming - Don't send a lot of small messages right after each other. Do not disrupt chat by spamming.
 
-    5. No offensive names and profile pictures
-        You will be asked to change your name or picture if the staff deems them inappropriate. Your name should be the name you go by hence (hopefully) should not be offensive.
+No pornographic/adult/other NSFW material - This is a community server and not meant for sharing this kind of material.
 
-    6. Direct & Indirect Threats
-        Threats to other users of DDoS, Death, DoX, abuse, and other malicious threats are absolutely prohibited and disallowed.
+No offensive names and profile pictures - You will be asked to change your name or picture if the staff deems them inappropriate. Your name should be the name you go by hence (hopefully) should not be offensive.
 
-    7. Follow the NCL student Charter
-        You can find it here: https://www.ncl.ac.uk/student-progress/policies/student-charter/
+Direct & Indirect Threats - Threats to other users of DDoS, Death, DoX, abuse, and other malicious threats are absolutely prohibited and disallowed.
 
-    8. No Collusion on Uni Work
-        Collusion on work could result in disciplinary action by the university. See: https://www.ncl.ac.uk/student-progress/policies/procedures/assessment%20irregularities/ for more information.
+Follow the NCL student Charter - You can find it here: https://www.ncl.ac.uk/student-progress/policies/student-charter/
+
+No Collusion on Uni Work - Collusion on work could result in disciplinary action by the university. See: https://www.ncl.ac.uk/student-progress/policies/procedures/assessment%20irregularities/ for more information.
 
 The Committee will Mute/Kick/Ban per discretion. If you feel mistreated, DM an Admin and we will resolve the issue.

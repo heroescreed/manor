@@ -11,6 +11,7 @@ users, managing server roles and logging server updates.
 
 ### General commands
 
+- `/8ball` - Answers any question you can throw at it.
 - `/auth` - Starts the authentication process.
 - `/cataas` - Gets a random image of a cat from cataas.com
 - `/coinflip` - Flips a coin.
@@ -19,6 +20,7 @@ users, managing server roles and logging server updates.
 - `/httpcat` - Gets a random image of a cat with a HTTP response code.
 - `/httpdog` - Gets a random image of a dog with a HTTP response code.
 - `/ping` - Shows bot latency.
+- `/rate` - Rates something from 1 to 10.
 - `/roll` - Rolls a dice, can take custom sides and rolls.
 - `/urandom` - Returns a 256 byte string of hexadecimal, fresh from /dev/urandom.
 - `/uwu` - Uwuifies text passed into it, or a random message a few messages before.

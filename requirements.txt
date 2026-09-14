@@ -3,3 +3,4 @@ requests
 python-dotenv
 pyOutlook
 uwuipy # lord have mercy on my soul
+lightstreamer-client-lib # used for one command lol

@@ -1,4 +1,4 @@
-# NUCATS-Discord-Bot
+# manor
 
 ![NUCATS Logo](https://raw.githubusercontent.com/NUCATS-Soc/NUCATS-Discord-Bot/main/github/github_banner.png)
 

@@ -4,7 +4,7 @@ server_id = 1011277165872021504
 bot_testing_channel = 1106202485661630565
 
 # Committee
-committee_channel = 1011279629870448751
+committee_channel = 1378367863630598227
 draft_announcements_channel = 1011280318336073748
 event_planning_channel = 1011280355887689799
 server_updates_channel = 1011283526345293836

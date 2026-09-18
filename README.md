@@ -12,7 +12,7 @@ users, managing server roles and logging server updates.
 ### General commands
 
 - `/8ball` - Answers any question you can throw at it.
-- `/auth` - Starts the authentication process.
+- Authentication starts from the button posted by `/auth_message` in the auth channel.
 - `/cataas` - Gets a random image of a cat from cataas.com
 - `/coinflip` - Flips a coin.
 - `/credits` - Displays developer credits.
@@ -27,6 +27,7 @@ users, managing server roles and logging server updates.
 
 ### Committee Only Commands
 
+- `/auth_message` - Posts a button that starts authentication in the auth channel.
 - `/unverify` - Removes a users verified role.
 - `/unverify_all` - Removes verified from all users in the server.
 - `/verify` - Give the verified role to a user.

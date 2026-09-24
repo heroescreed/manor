@@ -22,7 +22,7 @@ committee_group = [
 
 # Information
 information_channel = 1047520126620160041
-auth_channel = 1011294492869001327
+auth_channel = 1550464391156342865
 welcome_channel = 1011277166371156059
 announcements_channel = 1011277166371156061
 

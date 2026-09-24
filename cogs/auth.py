@@ -1,4 +1,3 @@
-import asyncio
 import os
 import random
 import re
@@ -49,33 +48,58 @@ class AuthModal(Modal, title="Verify your Student Status"):
             with smtplib.SMTP(smtp_server, smtp_port) as server:  # type: ignore
                 server.starttls()
                 server.login(smtp_username, smtp_password)  # type: ignore
-                server.sendmail(smtp_username, f"{email}@ncl.ac.uk", f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, please type the following into the verification channel:\n\nNUCATS{self.student_id.value}{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee.")
+                server.sendmail(smtp_username, f"{email}@ncl.ac.uk", f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, enter the following code in the verification modal in Discord:\n\n{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee.")
                 print(f"Sent verification email to {email}@ncl.ac.uk")
         except Exception as error:  # noqa: BLE001
             print(f"Error sending email: {error}")
             await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
             return
 
-        await interaction.response.send_message("Thank you! We've sent a verification code to your university email. Please check your university email address.\n\nIf you can't find the code, check your spam folder, or try verifying again.", ephemeral=True)
+        await interaction.response.send_modal(VerificationModal(verification_code))
 
-        def check(message):
-            return message.author == interaction.user and message.channel.id == ids.auth_channel and message.content.startswith(f"NUCATS{self.student_id.value}")
+
+class VerificationModal(Modal, title="Enter your verification code"):
+    verification_code_input = TextInput(
+        label="Verification code",
+        placeholder="Enter the 8-character code from your university email.",
+        required=True,
+        min_length=8,
+        max_length=8,
+    )
+
+    def __init__(self, verification_code: str):
+        super().__init__()
+        self.verification_code = verification_code
+
+    async def on_submit(self, interaction: discord.Interaction):
+        if self.verification_code_input.value != self.verification_code:
+            await interaction.response.send_message(
+                "The verification code you entered is incorrect. Please try again.",
+                ephemeral=True,
+            )
+            return
+
+        print(f"User {interaction.user} verified successfully.")
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.response.send_message(
+                "I could not update your server role. Please create a ticket to be verified manually.",
+                ephemeral=True,
+            )
+            return
 
         try:
-            message = await self.bot.wait_for("message", check=check, timeout=300.0)
-            if message.content == f"NUCATS{self.student_id.value}{verification_code}":
-                print(f"User {interaction.user} verified successfully.")
-                await message.delete()
-                await asyncio.sleep(1)
-                if not isinstance(interaction.user, discord.Member):
-                    await interaction.followup.send("I could not update your server role. Please create a ticket to be verified manually.", ephemeral=True)
-                    return
-                await interaction.user.add_roles(discord.Object(id=ids.verified_role))
-                await interaction.followup.send(f"Thank you {interaction.user.mention}! You have been verified. Please check your roles to ensure you have the 'Verified' role.", ephemeral=True)
-            else:
-                await interaction.followup.send("The verification code you entered is incorrect. Please try again.", ephemeral=True)
-        except asyncio.TimeoutError:
-            await interaction.followup.send("You took too long to respond. Please try the verification process again.", ephemeral=True)
+            await interaction.user.add_roles(discord.Object(id=ids.verified_role))
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                "I could not update your server role. Please create a ticket to be verified manually.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.send_message(
+            f"Thank you {interaction.user.mention}! You have been verified. Please check your roles to ensure you have the 'Verified' role.",
+            ephemeral=True,
+        )
 
 
 class AuthView(View):

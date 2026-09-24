@@ -85,6 +85,26 @@ class CommitteeCog(commands.Cog):
                 await member.add_roles(discord.Object(id=ids.alumni_role))
         await ctx.send("All users have been moved up a stage.\nPlease make an announcement to the server to inform members of this change.")
 
+    @commands.hybrid_command(name="verify_all", description="For committee members to verify all students.")
+    async def verify_all(self, ctx: commands.Context):
+        """
+        quite rare for this to be used, im only making this whilst locking down the server.
+        this verifies EVERYONE below the nucats bot role, so be careful, youll probs verify a bot or two but easy to get rid of when they pop up.
+        """
+        if not self.is_committee_member(ctx):
+            print(f"User {ctx.author} attempted to use verify_all command without permission.")
+            await ctx.send("You do not have permission to use this command.")
+            return
+        await ctx.send("Are you sure you want to verify all users? This action is reversable but annoying to do. (yes/no)")
+        if not await self.confirm(ctx):
+            await ctx.send("Command cancelled.")
+            return
+        await ctx.send("Verifying all users now. This may take a few minutes.")
+        for member in ctx.guild.members:  # type: ignore
+            if ids.verified_role not in [role.id for role in member.roles]:
+                print(f"Adding verified role to {member}.")
+                await member.add_roles(discord.Object(id=ids.verified_role))
+        await ctx.send("All users have been verified.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CommitteeCog(bot))

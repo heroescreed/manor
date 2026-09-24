@@ -55,7 +55,11 @@ class AuthModal(Modal, title="Verify your Student Status"):
             await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
             return
 
-        await interaction.response.send_modal(VerificationModal(verification_code))
+        await interaction.response.send_message(
+            "We've sent a verification code to your university email. Click the button below to enter it.",
+            ephemeral=True,
+            view=VerificationPromptView(verification_code),
+        )
 
 
 class VerificationModal(Modal, title="Enter your verification code"):
@@ -100,6 +104,16 @@ class VerificationModal(Modal, title="Enter your verification code"):
             f"Thank you {interaction.user.mention}! You have been verified. Please check your roles to ensure you have the 'Verified' role.",
             ephemeral=True,
         )
+
+
+class VerificationPromptView(View):
+    def __init__(self, verification_code: str):
+        super().__init__(timeout=300)
+        self.verification_code = verification_code
+
+    @discord.ui.button(label="Enter verification code", style=discord.ButtonStyle.primary)
+    async def enter_code(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_modal(VerificationModal(self.verification_code))
 
 
 class AuthView(View):

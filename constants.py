@@ -4,7 +4,7 @@ from typing import Dict
 
 load_dotenv()
 
-token = os.getenv("CLIENT_TOKEN")
+TOKEN = os.getenv("CLIENT_TOKEN")
 
 COLORS: Dict[str, str] = {"red": "\033[31m", "green": "\033[32m", "yellow": "\033[33m", "blue": "\033[34m", "default": "\033[37m"}
 

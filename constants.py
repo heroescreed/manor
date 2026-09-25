@@ -1,3 +1,13 @@
+import os
+from dotenv import load_dotenv
+from typing import Dict
+
+load_dotenv()
+
+token = os.getenv("CLIENT_TOKEN")
+
+COLORS: Dict[str, str] = {"red": "\033[31m", "green": "\033[32m", "yellow": "\033[33m", "blue": "\033[34m", "default": "\033[37m"}
+
 # Ids for server channels and roles
 server_id = 1011277165872021504
 
@@ -86,3 +96,5 @@ they_them_role = 1012486431421247508
 
 testing_role = 1032271882529021963
 northumbria_student_role = 1061275573017641060
+
+#Colour roles

@@ -1,11 +1,10 @@
 import asyncio
 import os
 import random
-
 from discord.ext import commands
 from uwuipy import Uwuipy
 
-import ids
+from constants import committee_channel
 
 
 class GeneralCog(commands.Cog):
@@ -81,7 +80,7 @@ class GeneralCog(commands.Cog):
     @commands.hybrid_command(name="request_command", description="Ask the developers to add a new command.")
     async def request_command(self, ctx: commands.Context, description: str):
         await ctx.send("Thanks! This has been sent to the committee for review. If they like it, it will be added.")
-        channel = self.bot.get_channel(ids.committee_channel)
+        channel = self.bot.get_channel(committee_channel)
         await channel.send(f"New command request from {ctx.author.mention}:\n{description}")  # type: ignore
 
     async def wait_for_choice(self, ctx: commands.Context, choices: list[str]) -> str:

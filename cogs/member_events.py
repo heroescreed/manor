@@ -1,9 +1,9 @@
 import random
-
 import discord
 from discord.ext import commands
 
-import ids
+from constants import welcome_channel
+
 
 
 class MemberEventsCog(commands.Cog):
@@ -12,7 +12,7 @@ class MemberEventsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        channel = self.bot.get_channel(ids.welcome_channel)
+        channel = self.bot.get_channel(welcome_channel)
         await channel.send(f"Welcome {member.mention} to the NUCATS Discord server! Please read the rules and verify yourself using the authentication button in the auth channel.")  # type: ignore
         await channel.send(f"https://http.cat/{self.random_status_code()}")  # type: ignore
 

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 
-import ids
+from constants import verified_role, committee_role, auth_channel
 
 
 async def check_student_number(student_number: str) -> bool:
@@ -92,7 +92,7 @@ class VerificationModal(Modal, title="Enter your verification code"):
             return
 
         try:
-            await interaction.user.add_roles(discord.Object(id=ids.verified_role))
+            await interaction.user.add_roles(discord.Object(id=verified_role))
         except discord.HTTPException:
             await interaction.response.send_message(
                 "I could not update your server role. Please create a ticket to be verified manually.",
@@ -132,11 +132,11 @@ class AuthCog(commands.Cog):
 
     @commands.hybrid_command(name="auth_message", description="Post the authentication button in the auth channel.")
     async def auth_message(self, ctx: commands.Context):
-        if not isinstance(ctx.author, discord.Member) or ids.committee_role not in [role.id for role in ctx.author.roles]:
+        if not isinstance(ctx.author, discord.Member) or committee_role not in [role.id for role in ctx.author.roles]:
             await ctx.send("You do not have permission to use this command.", ephemeral=True)
             return
 
-        channel = self.bot.get_channel(ids.auth_channel)
+        channel = self.bot.get_channel(auth_channel)
         if not isinstance(channel, discord.TextChannel):
             await ctx.send("I could not find the auth channel.", ephemeral=True)
             return
@@ -145,6 +145,9 @@ class AuthCog(commands.Cog):
         await ctx.send("Authentication message posted.", ephemeral=True)
 
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        pass
+
 async def setup(bot: commands.Bot):
-    bot.add_view(AuthView(bot))
     await bot.add_cog(AuthCog(bot))

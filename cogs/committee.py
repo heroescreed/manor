@@ -1,16 +1,14 @@
 import discord
 from discord.ext import commands
 
-from constants import committee_role, verified_role, stage_1_role, stage_2_role, stage_3_role, alumni_role
-
+from constants import verified_role, stage_1_role, stage_2_role, stage_3_role, alumni_role
+from utils import is_committee_member
 
 class CommitteeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    def is_committee_member(self, ctx: commands.Context) -> bool:
-        return committee_role in [role.id for role in ctx.author.roles]
-
+    #TODO: Turn this into a view with buttons for yes/no, and a timeout of 60 seconds. If the user does not respond in time, the command is cancelled.
     async def confirm(self, ctx: commands.Context) -> bool:
         def check(message):
             return message.author == ctx.author and message.channel == ctx.channel and message.content.lower() in ["yes", "no"]
@@ -22,7 +20,7 @@ class CommitteeCog(commands.Cog):
 
     @commands.hybrid_command(name="verify", description="For committee members to verify a student.")
     async def verify(self, ctx: commands.Context, user: discord.Member):
-        if not self.is_committee_member(ctx):
+        if not is_committee_member(ctx):
             print(f"User {ctx.author} attempted to use verify command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
@@ -31,7 +29,7 @@ class CommitteeCog(commands.Cog):
 
     @commands.hybrid_command(name="unverify", description="For committee members to unverify a student.")
     async def unverify(self, ctx: commands.Context, user: discord.Member):
-        if not self.is_committee_member(ctx):
+        if not is_committee_member(ctx):
             print(f"User {ctx.author} attempted to use unverify command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
@@ -40,7 +38,7 @@ class CommitteeCog(commands.Cog):
 
     @commands.hybrid_command(name="unverify_all", description="For committee members to unverify all students.")
     async def unverify_all(self, ctx: commands.Context):
-        if not self.is_committee_member(ctx):
+        if not is_committee_member(ctx):
             print(f"User {ctx.author} attempted to use unverify_all command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
@@ -62,7 +60,7 @@ class CommitteeCog(commands.Cog):
     # TODO: This command needs to be edited to ensure the users roles in "Channels and Roles" are also updated, otherwise it freaks out.
     @commands.hybrid_command(name="stage_up", description="Move all users in the server up a stage.")
     async def stage_up(self, ctx: commands.Context):
-        if not self.is_committee_member(ctx):
+        if not is_committee_member(ctx):
             print(f"User {ctx.author} attempted to use stage_up command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
@@ -91,7 +89,7 @@ class CommitteeCog(commands.Cog):
         quite rare for this to be used, im only making this whilst locking down the server.
         this verifies EVERYONE below the nucats bot role, so be careful, youll probs verify a bot or two but easy to get rid of when they pop up.
         """
-        if not self.is_committee_member(ctx):
+        if not is_committee_member(ctx):
             print(f"User {ctx.author} attempted to use verify_all command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return

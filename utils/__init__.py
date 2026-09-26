@@ -1,1 +1,1 @@
-from .utils import color_message, check_student_number
+from .utils import color_message, check_student_number, is_committee_member

@@ -1,6 +1,7 @@
 import re
 
-from constants import COLORS
+from discord.ext import commands
+from constants import COLORS, committee_role
 
 def color_message(message: str, color: str = COLORS["default"]):
     color = COLORS.get(color, COLORS["default"])
@@ -11,3 +12,6 @@ def check_student_number(student_number: str) -> bool:
     if len(student_number) != 9:
         return False
     return bool(re.match(r"^\d{9}$", student_number))
+
+def is_committee_member(ctx: commands.Context) -> bool:
+    return committee_role in [role.id for role in ctx.author.roles] # type: ignore

@@ -3,9 +3,10 @@ from discord.ext import commands
 
 from constants import verified_role, stage_1_role, stage_2_role, stage_3_role, alumni_role
 from utils import is_committee_member
+from bot.bot import Bot
 
 class CommitteeCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
     #TODO: Turn this into a view with buttons for yes/no, and a timeout of 60 seconds. If the user does not respond in time, the command is cancelled.
@@ -24,7 +25,11 @@ class CommitteeCog(commands.Cog):
             print(f"User {ctx.author} attempted to use verify command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
-        await user.add_roles(discord.Object(id=verified_role))
+        verified = ctx.guild.get_role(verified_role)  # type: ignore
+        if verified is None:
+            await ctx.send("Verified role not found in this server.", ephemeral=True)
+            return
+        await user.add_roles(verified)
         await ctx.send(f"{user.mention} has been verified.")
 
     @commands.hybrid_command(name="unverify", description="For committee members to unverify a student.")
@@ -33,7 +38,11 @@ class CommitteeCog(commands.Cog):
             print(f"User {ctx.author} attempted to use unverify command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
-        await user.remove_roles(discord.Object(id=verified_role))
+        verified = ctx.guild.get_role(verified_role)  # type: ignore
+        if verified is None:
+            await ctx.send("Verified role not found in this server.", ephemeral=True)
+            return
+        await user.remove_roles(verified)
         await ctx.send(f"{user.mention} has been unverified.")
 
     @commands.hybrid_command(name="unverify_all", description="For committee members to unverify all students.")
@@ -51,13 +60,16 @@ class CommitteeCog(commands.Cog):
             await ctx.send("Command cancelled.")
             return
         await ctx.send("Okay. Unverifying all users now. This may take a few minutes.")
+        verified = ctx.guild.get_role(verified_role)  # type: ignore
+        if verified is None:
+            await ctx.send("Verified role not found in this server.", ephemeral=True)
+            return
         for member in ctx.guild.members:  # type: ignore
-            if verified_role in [role.id for role in member.roles]:
+            if verified in member.roles:
                 print(f"Removing verified role from {member}.")
-                await member.remove_roles(discord.Object(id=verified_role))
+                await member.remove_roles(verified)
         await ctx.send("All users have been unverified.")
 
-    # TODO: This command needs to be edited to ensure the users roles in "Channels and Roles" are also updated, otherwise it freaks out.
     @commands.hybrid_command(name="stage_up", description="Move all users in the server up a stage.")
     async def stage_up(self, ctx: commands.Context):
         if not is_committee_member(ctx):
@@ -69,18 +81,24 @@ class CommitteeCog(commands.Cog):
             await ctx.send("Command cancelled.")
             return
         await ctx.send("Moving all users up a stage now. This may take a few minutes.")
+        stage_1 = ctx.guild.get_role(stage_1_role)  # type: ignore
+        stage_2 = ctx.guild.get_role(stage_2_role)  # type: ignore
+        stage_3 = ctx.guild.get_role(stage_3_role)  # type: ignore
+        alumni = ctx.guild.get_role(alumni_role)  # type: ignore
+        if stage_1 is None or stage_2 is None or stage_3 is None or alumni is None:
+            await ctx.send("One or more stage roles not found in this server.", ephemeral=True)
+            return
         for member in ctx.guild.members:  # type: ignore
             print(f"Editing roles for {member}.")
-            role_ids = [role.id for role in member.roles]
-            if stage_1_role in role_ids:
-                await member.remove_roles(discord.Object(id=stage_1_role))
-                await member.add_roles(discord.Object(id=stage_2_role))
-            elif stage_2_role in role_ids:
-                await member.remove_roles(discord.Object(id=stage_2_role))
-                await member.add_roles(discord.Object(id=stage_3_role))
-            elif stage_3_role in role_ids:
-                await member.remove_roles(discord.Object(id=stage_3_role))
-                await member.add_roles(discord.Object(id=alumni_role))
+            if stage_1 in member.roles:
+                await member.remove_roles(stage_1)
+                await member.add_roles(stage_2)
+            elif stage_2 in member.roles:
+                await member.remove_roles(stage_2)
+                await member.add_roles(stage_3)
+            elif stage_3 in member.roles:
+                await member.remove_roles(stage_3)
+                await member.add_roles(alumni)
         await ctx.send("All users have been moved up a stage.\nPlease make an announcement to the server to inform members of this change.")
 
     @commands.hybrid_command(name="verify_all", description="For committee members to verify all students.")
@@ -98,11 +116,15 @@ class CommitteeCog(commands.Cog):
             await ctx.send("Command cancelled.")
             return
         await ctx.send("Verifying all users now. This may take a few minutes.")
+        verified = ctx.guild.get_role(verified_role)  # type: ignore
+        if verified is None:
+            await ctx.send("Verified role not found in this server.", ephemeral=True)
+            return
         for member in ctx.guild.members:  # type: ignore
-            if verified_role not in [role.id for role in member.roles]:
+            if verified not in member.roles:
                 print(f"Adding verified role to {member}.")
-                await member.add_roles(discord.Object(id=verified_role))
+                await member.add_roles(verified)
         await ctx.send("All users have been verified.")
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Bot):
     await bot.add_cog(CommitteeCog(bot))

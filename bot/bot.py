@@ -17,8 +17,7 @@ class Bot(commands.AutoShardedBot):
 / \  /|/ \ /\/   _\/  _ Y__ __Y ___\ \n
 | |\ ||| | |||  /  | / \| / \ |    \ \n
 | | \||| \_/||  \__| |-|| | | \___ |\n
-\_/  \|\____/\____/\_/ \| \_/ \____/\n 
-            ''', color="yellow"))
+\_/  \|\____/\____/\_/ \| \_/ \____/''', color="yellow"))
         print(color_message(message="Initializing bot...", color="yellow"))
         asyncio.run(self.load_extensions())
         self.run(TOKEN) # type: ignore

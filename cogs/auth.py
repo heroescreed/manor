@@ -11,11 +11,6 @@ from discord.ui import Button, Modal, TextInput, View
 from constants import verified_role, committee_role, auth_channel
 
 
-async def check_student_number(student_number: str) -> bool:
-    print(f"Checking student number: {student_number}")
-    if len(student_number) != 9:
-        return False
-    return bool(re.match(r"^\d{9}$", student_number))
 
 class AuthModal(Modal, title="Verify your Student Status"):
     print("AuthModal called")

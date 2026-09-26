@@ -14,7 +14,7 @@ class AuthCog(commands.Cog):
 
     @commands.hybrid_command(name="auth_message", description="Post the authentication button in the auth channel.")
     async def auth_message(self, ctx: commands.Context, channel: discord.TextChannel):
-        if committee_role not in [role.id for role in ctx.author.roles]:
+        if committee_role not in [role.id for role in ctx.author.roles]: # type: ignore
             await ctx.send("You do not have permission to use this command.", ephemeral=True)
             # return
 
@@ -22,7 +22,7 @@ class AuthCog(commands.Cog):
             await ctx.send("I could not find the auth channel.", ephemeral=True)
             return
 
-        await channel.send("# Welcome to NUCATS!\nPlease click the button below to start the authentication process to prove you're a Newcastle University student.\n\nIf you are not a Newcastle University student, please create a ticket to be verified.", view=AuthView(self.bot))
+        await channel.send("# Welcome to NUCATS!\nPlease click the button below to start the authentication process to prove you're a Newcastle University student.\n\nIf you are not a Newcastle University student, please create a ticket to be verified.", view=AuthView())
         await ctx.send("Authentication message posted.", ephemeral=True)
 
 

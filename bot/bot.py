@@ -4,7 +4,7 @@ from discord.ext import commands
 from utils.utils import color_message
 from constants import TOKEN
 
-class Bot(commands.AutoShardedBot):
+class Bot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.all()
         super().__init__(command_prefix="!", intents=intents, help_command=None)
@@ -35,6 +35,5 @@ class Bot(commands.AutoShardedBot):
 
     async def on_ready(self):
         print(color_message(message=f"Logged in as {self.user}!", color="green"))
-        for shard in self.shards:
-            await self.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.playing, name=f"! | Shard: {shard+1}/{len(self.shards)}"), shard_id=shard)
+        await self.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.playing, name=f"Prefix: !"))
                 

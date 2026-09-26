@@ -1,20 +1,24 @@
-import asyncio
+import asyncio, datetime
 import os
 import random
 from discord.ext import commands
 from uwuipy import Uwuipy
 
 from constants import committee_channel
+from bot.bot import Bot
 
 
 class GeneralCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.uwu = Uwuipy()
 
     @commands.hybrid_command(name="ping", description="Check the bot's latency.")
     async def ping(self, ctx: commands.Context):
-        await ctx.send(f"Pong! Latency: {round(self.bot.latency * 1000)} ms")
+        time = datetime.datetime.now()
+        message = await ctx.send("Pong...")
+        latency = (datetime.datetime.now() - time).total_seconds() * 1000
+        await message.edit(content=f"Pong! Latency: {round(latency)} ms")
 
     @commands.hybrid_command(name="coinflip", description="Flips a coin.")
     async def coinflip(self, ctx: commands.Context):
@@ -90,5 +94,5 @@ class GeneralCog(commands.Cog):
         return message.content.lower()
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Bot):
     await bot.add_cog(GeneralCog(bot))

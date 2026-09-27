@@ -1,5 +1,4 @@
 import discord, string, random, os, smtplib
-from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 
 from utils import check_student_number

@@ -1,7 +1,7 @@
 import os
 from discord.ext import commands
 
-from bot.bot import *
+from bot.bot import Bot
 
 os.chdir("./")
 

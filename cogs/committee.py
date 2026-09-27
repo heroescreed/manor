@@ -3,21 +3,12 @@ from discord.ext import commands
 
 from constants import verified_role, stage_1_role, stage_2_role, stage_3_role, alumni_role
 from utils import is_committee_member
+from views import confirm
 from bot.bot import Bot
 
 class CommitteeCog(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
-
-    #TODO: Turn this into a view with buttons for yes/no, and a timeout of 60 seconds. If the user does not respond in time, the command is cancelled.
-    async def confirm(self, ctx: commands.Context) -> bool:
-        def check(message):
-            return message.author == ctx.author and message.channel == ctx.channel and message.content.lower() in ["yes", "no"]
-        try:
-            message = await self.bot.wait_for("message", check=check, timeout=60.0)
-        except TimeoutError:
-            return False
-        return message.content.lower() == "yes"
 
     @commands.hybrid_command(name="verify", description="For committee members to verify a student.")
     async def verify(self, ctx: commands.Context, user: discord.Member):
@@ -51,13 +42,11 @@ class CommitteeCog(commands.Cog):
             print(f"User {ctx.author} attempted to use unverify_all command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
-        await ctx.send("Please take extreme caution when running this command. This command removes verification from all users in the server. Are you sure you want to continue? (yes/no)")
-        if not await self.confirm(ctx):
-            await ctx.send("Command cancelled.")
+        await ctx.send("Please take extreme caution when running this command. This command removes verification from all users in the server.")
+        if not await confirm(ctx):
             return
-        await ctx.send("Are you absolutely sure you want to UNVERIFY ALL USERS?\nThis action is not reversable without a few hours of work, blood, sweat, and tears.\nPlease make sure you are running the right command.\nYou are about to remove the 'Verified' role from everyone in the server.\nDo you DEFINITELY want to continue? (yes/no)")
-        if not await self.confirm(ctx):
-            await ctx.send("Command cancelled.")
+        await ctx.send("Are you absolutely sure you want to UNVERIFY ALL USERS?\nThis action is not reversable without a few hours of work, blood, sweat, and tears.\nPlease make sure you are running the right command.\nYou are about to remove the 'Verified' role from everyone in the server.")
+        if not await confirm(ctx):
             return
         await ctx.send("Okay. Unverifying all users now. This may take a few minutes.")
         verified = ctx.guild.get_role(verified_role)  # type: ignore
@@ -76,9 +65,7 @@ class CommitteeCog(commands.Cog):
             print(f"User {ctx.author} attempted to use stage_up command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
-        await ctx.send("Are you sure you want to move all users up a stage? This action is reversable but annoying to do. (yes/no)")
-        if not await self.confirm(ctx):
-            await ctx.send("Command cancelled.")
+        if not await confirm(ctx):
             return
         await ctx.send("Moving all users up a stage now. This may take a few minutes.")
         stage_1 = ctx.guild.get_role(stage_1_role)  # type: ignore
@@ -111,9 +98,7 @@ class CommitteeCog(commands.Cog):
             print(f"User {ctx.author} attempted to use verify_all command without permission.")
             await ctx.send("You do not have permission to use this command.")
             return
-        await ctx.send("Are you sure you want to verify all users? This action is reversable but annoying to do. (yes/no)")
-        if not await self.confirm(ctx):
-            await ctx.send("Command cancelled.")
+        if not await confirm(ctx):
             return
         await ctx.send("Verifying all users now. This may take a few minutes.")
         verified = ctx.guild.get_role(verified_role)  # type: ignore

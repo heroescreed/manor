@@ -7,12 +7,5 @@ class Base(DeclarativeBase):
 class OpenTickets(Base):
     __tablename__ = 'open_tickets'
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
-    panel_id = Column(Integer, ForeignKey('ticket_panels.id'), nullable=False)
-
-class TicketPanels(Base):
-    __tablename__ = 'ticket_panels'
-
-    message_id = Column(Integer, primary_key=True)
-    channel_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, unique=True, nullable=False)
+    channel_id = Column(Integer, primary_key=True, nullable=False)

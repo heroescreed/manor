@@ -7,7 +7,11 @@ from constants import TOKEN
 class Bot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.all()
-        super().__init__(command_prefix="!", intents=intents, help_command=None)
+        super().__init__(command_prefix="!", 
+                         intents=intents, 
+                         help_command=None, 
+                         allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=False), 
+                         allowed_contexts=discord.app_commands.AppCommandContext(guild=True, dm_channel=False, private_channel=False))
         self.unloaded_cogs = []
 
     def initialize(self):

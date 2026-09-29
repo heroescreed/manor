@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands, tasks
 
 from bot import Bot
-from utils import is_committee_member
-from views import Ticket_Open, reset_cooldown_loop
+from utils import is_committee_member, color_message
+from views import Ticket_Open, reset_cooldown_loop, Ticket_Close
 
 class SupportCog(commands.Cog):
     def __init__(self, bot: Bot):
@@ -29,10 +29,16 @@ class SupportCog(commands.Cog):
     async def on_ready(self):
         try:
             self.bot.add_view(Ticket_Open(self.bot))
-            print("Loaded Ticket_Open view")
+            print(color_message("Loaded Ticket_Open view", color="green"))
         except Exception as e:
             print(e)
-            print("Failed to load Ticket_Open view")
+            print(color_message("Failed to load Ticket_Open view", color="red"))
+        try:
+            self.bot.add_view(Ticket_Close(self.bot))
+            print(color_message("Loaded Ticket_Close view", color="green"))
+        except Exception as e:
+            print(e)
+            print(color_message("Failed to load Ticket_Close view", color="red"))
 
     @tasks.loop(minutes=1)
     async def reset_cooldown_list(self):

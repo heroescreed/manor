@@ -1,14 +1,14 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from bot import Bot
-from db import get_db
 from utils import is_committee_member
-from views import Ticket_Open
+from views import Ticket_Open, reset_cooldown_loop
 
 class SupportCog(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.reset_cooldown_list.start()
 
     @commands.hybrid_command(name="panel", description="Send the support pannel to the selected channel.")
     async def support(self, ctx: commands.Context, channel: discord.TextChannel):
@@ -33,6 +33,11 @@ class SupportCog(commands.Cog):
         except Exception as e:
             print(e)
             print("Failed to load Ticket_Open view")
+
+    @tasks.loop(minutes=1)
+    async def reset_cooldown_list(self):
+        await self.bot.wait_until_ready()
+        await reset_cooldown_loop()
 
 async def setup(bot: Bot):
     await bot.add_cog(SupportCog(bot))

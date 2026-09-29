@@ -46,7 +46,8 @@ class Ticket_Open(discord.ui.View):
             creation_cooldown.remove(interaction.user.id)
             return
 
-        category = await interaction.guild.fetch_channel(TICKET_CATEGORY_ID)
+
+        category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
         if not isinstance(category, discord.CategoryChannel):
             category = None
 

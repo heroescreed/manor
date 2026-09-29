@@ -1,3 +1,5 @@
+from email.message import EmailMessage
+
 import discord, string, random, os, smtplib
 from discord.ui import Button, Modal, TextInput, View
 
@@ -36,12 +38,18 @@ class AuthModal(Modal):
             smtp_port = int(os.getenv("SMTP_PORT"))  # type: ignore
             smtp_username = os.getenv("SMTP_USERNAME")
             smtp_password = os.getenv("SMTP_PASSWORD")
+            smtp_from = os.getenv("SMTP_FROM")
+            msg = EmailMessage()
             if smtp_username is None or smtp_password is None:
                 raise RuntimeError("SMTP credentials are not configured")
             with smtplib.SMTP(smtp_server, smtp_port) as server:  # type: ignore
                 server.starttls()
                 server.login(smtp_username, smtp_password)  # type: ignore
-                server.sendmail(smtp_username, f"{email}@ncl.ac.uk", f"Subject: NUCATS Discord Verification Code\n\nHello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, enter the following code in the verification modal in Discord:\n\n{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee.")
+                msg['From'] = smtp_from
+                msg['To'] = f"{email}@ncl.ac.uk"
+                msg['Subject'] = "NUCATS Discord Verification Code"
+                msg.set_content(f"Hello {self.name.value},\n\nThank you for starting your verification steps on the NUCATS Discord server.\n\nTo complete your verification, enter the following code in the verification modal in Discord:\n\n{verification_code}\n\nPlease do not share this code with anyone else.\n\nIf you did not request this code, please ignore this email.\n\nThis inbox does accept emails, however replies to this email will be ignored and discarded.\nIf you have any questions, please create a ticket in the server.\n\nKind Regards,\n\nNUCATS Committee.")
+                server.send_message(msg)
                 print(f"Sent verification email to {email}@ncl.ac.uk")
         except Exception as error:  # noqa: BLE001
             print(f"Error sending email: {error}")

@@ -53,8 +53,8 @@ class AuthModal(Modal):
                 print(f"Sent verification email to {email}@ncl.ac.uk")
         except Exception as error:  # noqa: BLE001
             print(f"Error sending email: {error}")
-            # await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
-            # return
+            await interaction.response.send_message("We're very sorry, but we couldn't send you a verification email. Please create a ticket to be verified manually.", ephemeral=True)
+            return
 
         verification_view = VerificationPromptView(verification_code)
         await interaction.response.send_message("We've sent a verification code to your university email. Click the button below to enter it.", ephemeral=True, view=verification_view)

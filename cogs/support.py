@@ -39,5 +39,11 @@ class SupportCog(commands.Cog):
         await self.bot.wait_until_ready()
         await reset_cooldown_loop()
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        assert self.bot.user is not None, "Bot user is not Logged in"
+        if message.type == discord.MessageType.pins_add and message.author.id == self.bot.user.id:
+            await message.delete()
+
 async def setup(bot: Bot):
     await bot.add_cog(SupportCog(bot))

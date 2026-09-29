@@ -1,10 +1,10 @@
 from email.message import EmailMessage
 
-import discord, string, random, os, smtplib
+import discord, string, random, smtplib
 from discord.ui import Button, Modal, TextInput, View
 
 from utils import check_student_number
-from constants import verified_role
+from constants import verified_role, smtp_server, smtp_port, smtp_username, smtp_password, smtp_from
 
 class AuthModal(Modal):
     def __init__(self):
@@ -34,11 +34,6 @@ class AuthModal(Modal):
         email = "c" + self.student_id.value[1 : -1]
         verification_code = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
         try:
-            smtp_server = os.getenv("SMTP_SERVER")
-            smtp_port = int(os.getenv("SMTP_PORT"))  # type: ignore
-            smtp_username = os.getenv("SMTP_USERNAME")
-            smtp_password = os.getenv("SMTP_PASSWORD")
-            smtp_from = os.getenv("SMTP_FROM")
             msg = EmailMessage()
             if smtp_username is None or smtp_password is None:
                 raise RuntimeError("SMTP credentials are not configured")

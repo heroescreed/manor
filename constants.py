@@ -14,6 +14,12 @@ COLOUR_MAIN = 0x43a1e8
 COLOUR_NEUTRAL = 0xFCAE1E
 COLOUR_GOOD = 0x03C04A
 
+smtp_server = os.getenv("SMTP_SERVER")
+smtp_port = int(os.getenv("SMTP_PORT")) # type: ignore
+smtp_username = os.getenv("SMTP_USERNAME")
+smtp_password = os.getenv("SMTP_PASSWORD")
+smtp_from = os.getenv("SMTP_FROM")
+
 # Ids for server channels and roles
 server_id = 1011277165872021504
 

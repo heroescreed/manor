@@ -146,6 +146,10 @@ class Ticket_Close(discord.ui.View):
         log_channel = interaction.guild.get_channel(ticket_log_channel)
         if log_channel is not None and isinstance(log_channel, discord.TextChannel):
             await log_channel.send(embed=log_embed, file=transcript_file)
+            transcript_file = discord.File(
+                io.BytesIO(transcript.encode()),
+                filename=f"transcript-{interaction.channel.name}.html",
+            )
         try:
             if ownerid:
                 member = interaction.guild.get_member(int(ownerid))

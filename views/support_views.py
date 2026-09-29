@@ -34,7 +34,7 @@ class Ticket_Open(discord.ui.View):
                 existing_channel = self.bot.get_channel(existing_ticket.channel_id) # type: ignore
                 if existing_channel:
                     await existing_channel.set_permissions(interaction.user, send_messages=True, read_messages=True, view_channel=True, embed_links=True, attach_files=True) # type: ignore
-                    await interaction.response.send_message(f"You already have an open ticket, use that one instead.\n\n{existing_channel.mention}", ephemeral=True) # type: ignore
+                    await interaction.followup.send(f"You already have an open ticket, use that one instead.\n\n{existing_channel.mention}", ephemeral=True) # type: ignore
                     creation_cooldown.remove(interaction.user.id)
                     return
                 else:
@@ -42,7 +42,7 @@ class Ticket_Open(discord.ui.View):
                     db.commit()
 
         if interaction.guild is None:
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.followup.send("This command can only be used in a server.", ephemeral=True)
             creation_cooldown.remove(interaction.user.id)
             return
 
@@ -53,7 +53,7 @@ class Ticket_Open(discord.ui.View):
 
         committee = interaction.guild.get_role(committee_role)
         if committee is None:
-            await interaction.response.send_message("The committee role does not exist in this server. Please contact an administrator.", ephemeral=True)
+            await interaction.followup.send("The committee role does not exist in this server. Please contact an administrator.", ephemeral=True)
             creation_cooldown.remove(interaction.user.id)
             return
 

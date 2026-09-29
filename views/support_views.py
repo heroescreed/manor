@@ -71,6 +71,85 @@ class Ticket_Open(discord.ui.View):
         embed = discord.Embed(title="Ticket Created", description=f"Your ticket has been created. Please wait for a committee member to assist you.", color=discord.Colour.blue())
         await ticket.send(content=f"{interaction.user.mention}{committee.mention}", embed=embed)
 
+class Ticket_Close(discord.ui.View):
+    def __init__(self, bot: Bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.red, custom_id="nucats:close_ticket")
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.response.send_message("This button can only be used in a server.", ephemeral=True)
+            return
+
+        assert interaction.guild is not None, "Interaction guild is None"
+        assert interaction.channel is not None, "Interaction channel is None"
+        assert interaction.message is not None, "Interaction message is None"
+
+        if not isinstance(interaction.channel, discord.TextChannel):
+            await interaction.response.send_message("This button can only be used in a text channel.", ephemeral=True)
+            return
+
+        with get_db() as db:
+            ticket = db.query(OpenTickets).filter_by(channel_id=interaction.channel.id).first()
+            if not ticket:
+                await interaction.response.send_message("This channel is not a ticket.", ephemeral=True)
+                return
+
+        await interaction.message.edit(view=None)
+
+        embed = discord.Embed(title="Ticket Closing log", colour=COLOUR_MAIN)
+        await interaction.channel.send(embed=embed)
+        embed = discord.Embed(title="Removing ticket from database", colour=COLOUR_NEUTRAL)
+        msg = await interaction.channel.send(embed=embed)
+        with get_db() as db:
+            ticket = db.query(OpenTickets).filter_by(channel_id=interaction.channel.id).first()
+            ownerid: int = ticket.user_id if ticket else None # type: ignore
+            if ticket:
+                db.delete(ticket)
+                db.commit()
+
+        embed = discord.Embed(title="Removed ticket from database", colour=COLOUR_GOOD)
+        await msg.edit(embed=embed)
+        embed = discord.Embed(title="Generating transcript", colour=COLOUR_NEUTRAL)
+        msg = await interaction.channel.send(embed=embed)
+
+        transcript = await chat_exporter.export(interaction.channel, 
+                                                limit=None,
+                                                tz_info="UTC",
+                                                guild=interaction.guild,
+                                                military_time=True,
+                                                fancy_times=False,
+                                                bot=self.bot)
+        if transcript is None:
+            embed = discord.Embed(title="Failed to generate transcript", colour=discord.Colour.red())
+            await msg.edit(embed=embed)
+            return
+
+        transcript_file = discord.File(
+            io.BytesIO(transcript.encode()),
+            filename=f"transcript-{interaction.channel.name}.html",
+        )
+
+        log_embed = discord.Embed(title="Ticket closed", description=f"""Ticket: {interaction.channel.name} ({interaction.channel.id})\nClosed By: {interaction.user.mention} ({interaction.user.id})\nCreated By: <@{ownerid}> ({ownerid})""", colour=COLOUR_MAIN)
+        log_channel = interaction.guild.get_channel(ticket_log_channel)
+        if log_channel is not None and isinstance(log_channel, discord.TextChannel):
+            await log_channel.send(embed=log_embed, file=transcript_file)
+        try:
+            if ownerid:
+                member = interaction.guild.get_member(int(ownerid))
+                if member:
+                    member_embed=discord.Embed(title="Ticket closed", description=f"Your ticket has been closed. The transcript is attached above", colour=COLOUR_MAIN)
+                    await member.send(embed=member_embed, file=transcript_file)
+        except Exception as e:
+            print(e)
+            pass
+
+        embed = discord.Embed(title="Transcript Generated", colour=COLOUR_GOOD)
+        await msg.edit(embed=embed)
+        await interaction.channel.send(embed=discord.Embed(title="", description=f"This channel will be deleted <t:{round(time.time())+11}:R>", colour=COLOUR_NEUTRAL))
+        await asyncio.sleep(10)
+        await interaction.channel.delete()
 
 
 async def reset_cooldown_loop():

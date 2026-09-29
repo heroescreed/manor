@@ -69,7 +69,17 @@ class Ticket_Open(discord.ui.View):
         )
 
         embed = discord.Embed(title="Ticket Created", description=f"Your ticket has been created. Please wait for a committee member to assist you.", color=discord.Colour.blue())
-        await ticket.send(content=f"{interaction.user.mention}{committee.mention}", embed=embed)
+        msg = await ticket.send(content=f"{interaction.user.mention}{committee.mention}", embed=embed, view=Ticket_Close(self.bot))
+        await msg.pin()
+
+        with get_db() as db:
+            new_ticket = OpenTickets(user_id=interaction.user.id, channel_id=ticket.id)
+            db.add(new_ticket)
+            db.commit()
+
+        creation_cooldown.remove(interaction.user.id)
+
+        await interaction.followup.send(f"Your ticket has been created: {ticket.mention}", ephemeral=True)
 
 class Ticket_Close(discord.ui.View):
     def __init__(self, bot: Bot):
